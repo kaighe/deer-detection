@@ -24,7 +24,7 @@ bot = DiscordBot(
     channel_id=int(os.getenv("DISCORD_CHANNEL")),
     daemon=True
 )
-webserver = WebServer(camera, host="localhost", daemon=True)
+webserver = WebServer(camera, host="0.0.0.0", daemon=True)
 
 camera.start()
 bot.start()
