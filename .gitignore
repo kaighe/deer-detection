@@ -1,0 +1,9 @@
+/datasets
+/.venv
+/runs
+
+.env
+
+*.pt
+
+__pycache__
