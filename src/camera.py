@@ -14,7 +14,7 @@ class Camera(threading.Thread):
         self.size = size
         self.capture_length = capture_length
 
-        self.frames = deque(maxlen=round(capture_length*fps))
+        self.frames: deque[cv2.typing.MatLike] = deque(maxlen=round(capture_length*fps))
         self.new_frame = False
 
     def run(self):
@@ -30,14 +30,16 @@ class Camera(threading.Thread):
     
     def frame(self, blocking=True):
         if(not blocking):
-            return self.frames[0]
+            if(len(self.frames) == 0): return None
+            return self.frames[-1]
         else:
             while(not self.new_frame): pass
             self.new_frame = False
-            return self.frames[0]
+            return self.frames[-1]
     
     def save(self):
         frames = self.frames.copy()
+        frames = [cv2.cvtColor(x, cv2.COLOR_BGR2RGB) for x in frames]
         buffer = io.BytesIO()
         imageio.mimsave(buffer, frames, format="GIF", duration=1/self.fps * 1000, loop=0)
         return buffer

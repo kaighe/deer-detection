@@ -1,45 +1,47 @@
 from glob import glob
 from pathlib import Path
 import shutil
+import random
 
-source = Path("into-the-vale")
-target = Path("dataset")
+def add_source(source, target, mapping, max_labels=None):
+    for dir in ["train", "valid"]:
+        source_dir = Path(source) / dir
+        target_dir = Path(target) / dir
+        target_dir.mkdir(exist_ok=True)
 
-mapping = {
-    0: 0,
-    2: 1,
-    4: 2,
-    5: 3
-}
+        Path(target_dir / "labels").mkdir(exist_ok=True)
+        Path(target_dir / "images").mkdir(exist_ok=True)
 
-dirs = ["train", "valid"]
+        paths = [Path(x) for x in glob(str(source_dir / "images" / "*"))]
+        random.shuffle(paths)
 
-for dir in dirs:
-    source_dir = source / dir
-    target_dir = target / dir
-    target_dir.mkdir(exist_ok=True)
+        label_count = 0
+        
+        for path in paths:
+            if(max_labels != None and label_count > max_labels): break
+            label_name = f"{path.stem}.txt"
+            f = open(source_dir / "labels" / label_name, "r")
+            labels = [x.strip().split(" ") for x in f.readlines()]
+            f.close()
 
-    target_image_dir = target_dir / "images"
-    target_image_dir.mkdir(exist_ok=True)
-    for image_path in glob(str(source_dir / "images" / "*")):
-        image_path = Path(image_path)
-        shutil.copy(image_path, target_dir / "images")
-    
-    target_label_dir = target_dir / "labels"
-    target_label_dir.mkdir(exist_ok=True)
-    for label_path in glob(str(source_dir / "labels" / "*")):
-        label_path = Path(label_path)
-        f = open(label_path, "r")
-        labels = f.readlines()
-        f.close()
+            f = open(target_dir / "labels" / label_name, "w")
+            for label in labels:
+                id = int(label[0])
+                if(id in mapping):
+                    label[0] = str(mapping[id])
+                    f.write(" ".join(label) + "\n")
+                    label_count += 1
+            f.close()
 
-        new_labels = []
+            shutil.copy(path, target_dir / "images" / path.name)
 
-        f = open(target_label_dir / label_path.name, "w")
-        for label in labels:
-            label = label.split(" ")
-            if(int(label[0]) in mapping):
-                label[0] = str(mapping[int(label[0])])
-                label = " ".join(label).strip("\n")
-                f.write(label + "\n")
-        f.close()
+add_source("datasets/deer", "datasets/main", {
+    0: 0, # antlerless
+    2: 0, # buck
+    4: 1, # human
+    5: 2  # raccoon
+})
+
+add_source("datasets/people", "datasets/main", {
+    0: 1
+}, max_labels=200)

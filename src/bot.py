@@ -15,10 +15,12 @@ class DiscordBot(threading.Thread):
         intents = discord.Intents.default()
         self.client = discord.Client(intents=intents)
         self.channel: discord.TextChannel = None
+        self.ready = False
 
         @self.client.event
         async def on_ready():
             logger.info(f"Logged in as '{self.client.user.name}'")
+            self.ready = True
             self.channel = self.client.get_channel(channel_id)
 
     def send(self, message: str, buffer:io.BytesIO=None, filename=None):
@@ -47,6 +49,8 @@ if(__name__ == "__main__"):
     )
 
     bot.start()
+
+    while(not bot.ready): pass
 
     while True:
         message = input(">>> ")
