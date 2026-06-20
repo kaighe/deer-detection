@@ -50,4 +50,4 @@ if(__name__ == "__main__"):
 
     while True:
         message = input(">>> ")
-        bot.send(message, file="captures/capture.gif")
+        bot.send(message)

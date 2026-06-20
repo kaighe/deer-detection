@@ -2,8 +2,9 @@ import cv2
 from ultralytics import YOLO
 import time
 import numpy as np
-import imageio
 import io
+
+from camera import Camera
 
 class Result:
     bbox: tuple[float, float, float, float]
@@ -11,15 +12,15 @@ class Result:
     confidence: float
 
 class Detector:
-    def __init__(self, model: str, video: int = 0):
-        self.video = cv2.VideoCapture(video)
+    def __init__(self, model: str, camera: Camera):
         self.model = YOLO(model, verbose=False)
+        self.camera = camera
     
-    def motion(self, interval=0.25):
-        frame_a = self.video.read()[1]
-        time.sleep(interval)
-        frame_b = self.video.read()[1]
-        if(frame_a is None or frame_b is None): return 0
+    def motion(self):
+        self.camera.frame()
+        if(len(self.camera.frames) < 2): return 0
+        frame_a = self.camera.frames[1]
+        frame_b = self.camera.frames[0]
 
         frame_a = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
         frame_a = cv2.GaussianBlur(frame_a, (21, 21), 0)
@@ -39,7 +40,7 @@ class Detector:
             if(self.motion() > threshold): return
 
     def predict(self, threshold=0.0) -> list[Result]:
-        frame = self.video.read()[1]
+        frame = self.camera.frame()
         if(frame is None): return []
 
         results = []
@@ -54,22 +55,3 @@ class Detector:
                 
                 results.append(result)
         return results
-    
-    def record(self, length: float, fps = 10):
-        frames = []
-
-        start_time = time.perf_counter()
-        frame_timer = 0
-        while(time.perf_counter() - start_time < length):
-            if(time.perf_counter() - frame_timer < 1/fps): continue
-            frame_timer = time.perf_counter()
-
-            frame = self.video.read()[1]
-            if(frame is None): continue
-
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frames.append(rgb_frame)
-
-        buffer = io.BytesIO()
-        imageio.mimsave(buffer, frames, format="GIF", duration=len(frames)/length, loop=0)
-        return buffer
