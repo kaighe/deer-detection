@@ -35,7 +35,7 @@ while True:
     while(time.perf_counter() - watch_time <= 5):
         results = detector.predict(threshold=0.5)
         for result in results:
-            if(result.class_name in ["buck", "antlerless", "human"] and time.perf_counter() - last_message > 60*3):
+            if(result.class_name in ["buck", "antlerless"] and time.perf_counter() - last_message > 60*3):
                 logger.info(f"Detected: {result.class_name}")
                 time.sleep(camera.capture_length*0.75)
                 buffer = camera.save()
