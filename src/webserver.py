@@ -3,9 +3,12 @@ from flask import Flask, render_template, send_file
 import logging
 import cv2
 import io
+import time
 from camera import Camera
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
+
+logger = logging.getLogger("webserver")
 
 class WebServer(threading.Thread):
     def __init__(self, camera: Camera, host: str = "127.0.0.1", port: int = 5000, daemon = None):
@@ -25,7 +28,13 @@ class WebServer(threading.Thread):
         self.app.add_url_rule("/image", view_func=self.image)
     
     def run(self):
-        self.app.run(host=self.host, port=self.port)
+        while True:
+            try:
+                self.app.run(host=self.host, port=self.port)
+            except Exception as e:
+                logger.exception(e)
+                logger.info("Restarting in 5 seconds...")
+                time.sleep(5)
     
     def index(self):
         return render_template("index.html")

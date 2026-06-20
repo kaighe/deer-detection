@@ -3,6 +3,7 @@ import logging
 import threading
 import asyncio
 import io
+import time
 
 logger = logging.getLogger("bot")
 
@@ -34,7 +35,13 @@ class DiscordBot(threading.Thread):
         future.result()
 
     def run(self):
-        self.client.run(self.token, log_handler=None)
+        while True:
+            try:
+                self.client.run(self.token, log_handler=None)
+            except Exception as e:
+                logger.exception(e)
+                logger.info("Restarting in 5 seconds...")
+                time.sleep(5)
 
 if(__name__ == "__main__"):
     import os

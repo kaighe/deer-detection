@@ -3,7 +3,10 @@ import imageio
 import io
 import threading
 import time
+import logging
 from collections import deque
+
+logger = logging.getLogger("camera")
 
 class Camera(threading.Thread):
     def __init__(self, video:int=0, fps=5, size=(640, 640), capture_length=10.0, daemon=None):
@@ -19,14 +22,19 @@ class Camera(threading.Thread):
 
     def run(self):
         while True:
-            start_time = time.perf_counter()
+            try:
+                start_time = time.perf_counter()
 
-            check, frame = self.video.read()
-            frame = cv2.resize(frame, self.size)
-            self.frames.appendleft(frame)
-            self.new_frame = True
+                check, frame = self.video.read()
+                frame = cv2.resize(frame, self.size)
+                self.frames.appendleft(frame)
+                self.new_frame = True
 
-            time.sleep(max(0.0, 1/self.fps - (time.perf_counter() - start_time)))
+                time.sleep(max(0.0, 1/self.fps - (time.perf_counter() - start_time)))
+            except Exception as e:
+                logger.exception(e)
+                logger.info("Restarting in 5 seconds...")
+                time.sleep(5)
     
     def frame(self, blocking=True):
         if(not blocking):
