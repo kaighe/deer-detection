@@ -1,0 +1,5 @@
+discord.py>=2.7.1
+python-dotenv>=1.2.2
+ultralytics>=8.4.71
+numpy>=2.4.6
+ImageIO>=2.37.3
