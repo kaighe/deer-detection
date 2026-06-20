@@ -31,7 +31,8 @@ class WebServer(threading.Thread):
         return render_template("index.html")
     
     def image(self):
-        frame = self.camera.frames[-1].copy()
+        if(len(self.camera.frames) == 0): return "Camera not initialized.", 500
+        frame = self.camera.frames[0].copy()
         success, buffer = cv2.imencode(".jpg", frame)
         if(not success): return "Could not encode image", 500
 

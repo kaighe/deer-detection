@@ -23,7 +23,7 @@ class Camera(threading.Thread):
 
             check, frame = self.video.read()
             frame = cv2.resize(frame, self.size)
-            self.frames.append(frame)
+            self.frames.appendleft(frame)
             self.new_frame = True
 
             time.sleep(max(0.0, 1/self.fps - (time.perf_counter() - start_time)))
@@ -31,17 +31,17 @@ class Camera(threading.Thread):
     def frame(self, blocking=True):
         if(not blocking):
             if(len(self.frames) == 0): return None
-            return self.frames[-1]
+            return self.frames[0]
         else:
             while(not self.new_frame): pass
             self.new_frame = False
-            return self.frames[-1]
+            return self.frames[0]
     
     def save(self):
         frames = self.frames.copy()
         frames = [cv2.cvtColor(x, cv2.COLOR_BGR2RGB) for x in frames]
         buffer = io.BytesIO()
-        imageio.mimsave(buffer, frames, format="GIF", duration=1/self.fps * 1000, loop=0)
+        imageio.mimsave(buffer, frames[::-1], format="GIF", duration=1/self.fps * 1000, loop=0)
         return buffer
 
 if(__name__ == "__main__"):
@@ -49,5 +49,5 @@ if(__name__ == "__main__"):
     camera.start()
 
     while True:
-        input("Press enter to save gif.")
-        camera.save("test.gif")
+        cv2.imshow("preview", camera.frame())
+        cv2.waitKey(200)
