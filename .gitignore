@@ -4,6 +4,6 @@
 
 .env
 
-*.pt
+# *.pt
 
 __pycache__
